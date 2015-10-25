@@ -6,7 +6,10 @@ import struct
 import httplib
 import threading
 import time
+import signal
+import sys
 
+fileObject = None;
 class HttpThread(threading.Thread):
 	'singe thread for http request'
 	totalThreadNum = 0;
@@ -42,7 +45,25 @@ def scanStart(ip,ipPort,fo):
 
 	return;
 
-def main(): 
+def onSignalTerminal(sigNum, frame):
+	global fileObject;
+	count = HttpThread.totalThreadNum;
+	while count > 0 :
+		count = HttpThread.totalThreadNum;
+	
+	if fileObject != None : 
+		print "debug 2";
+		fileObject.close();
+
+	sys.exit(0);
+	return;
+
+def main():
+	global fileObject;
+	#register to handle signal	
+	signal.signal(signal.SIGINT, onSignalTerminal); 
+	signal.signal(signal.SIGTERM, onSignalTerminal);
+	signal.signal(signal.SIGTSTP, onSignalTerminal);
 	startIpStr = raw_input("Enter the start ip address:");
 	endIpStr = raw_input("Enter the end ip address:");
 	ipPort = raw_input("Enter the http request port:");
@@ -57,19 +78,20 @@ def main():
 	print "end ip " + str(endIpInt);
 	print "count " + str(ipCount);
 	i = 0;	
-	fo = open("ip_scan.txt", "a+");
+	fileObject = open("ip_scan.txt", "a+");
+	
 	while i <= ipCount :	
 		if HttpThread.totalThreadNum >= 20:
 			continue;	
 		ipaddressStr = str((startIpInt+i)/255/255/255) + "." + str((startIpInt+i)/255/255%255) + "." + str((startIpInt+i)/255%255) + "." + str((startIpInt+i)%255);
-		myThread = HttpThread(ipaddressStr,ipPort,fo);
+		myThread = HttpThread(ipaddressStr,ipPort,fileObject);
 		myThread.start();	
 		i += 1;
 
 
 	while HttpThread.totalThreadNum > 0:
 		time.sleep(1);	
-	fo.close();	
+	fileObject.close();	
 	return;
 
 if __name__=='__main__':
