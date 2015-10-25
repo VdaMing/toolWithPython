@@ -5,6 +5,7 @@ import socket
 import struct
 import httplib
 import threading
+import time
 
 class HttpThread(threading.Thread):
 	'singe thread for http request'
@@ -57,13 +58,13 @@ def main():
 	print "count " + str(ipCount);
 	i = 0;	
 	fo = open("ip_scan.txt", "a+");
-	while i <= ipCount+1 :	
+	while i <= ipCount :	
 		if HttpThread.totalThreadNum >= 20:
 			continue;	
-		i += 1;	
 		ipaddressStr = str((startIpInt+i)/255/255/255) + "." + str((startIpInt+i)/255/255%255) + "." + str((startIpInt+i)/255%255) + "." + str((startIpInt+i)%255);
 		myThread = HttpThread(ipaddressStr,ipPort,fo);
 		myThread.start();	
+		i += 1;
 
 
 	while HttpThread.totalThreadNum > 0:
